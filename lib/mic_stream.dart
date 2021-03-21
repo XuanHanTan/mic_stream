@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:permission/permission.dart';
-
 import 'package:flutter/services.dart';
 
 // In reference to the implementation of the official sensors plugin
@@ -34,20 +32,8 @@ const int _MAX_SAMPLE_RATE = 100000;
 const EventChannel _microphoneEventChannel =
     EventChannel('aaron.code.com/mic_stream');
 
-Permissions _permission;
 Stream<dynamic> _microphone;
 
-// This function manages the permission and ensures you're allowed to record audio
-Future<bool> get permissionStatus async {
-  _permission =
-      (await Permission.getPermissionsStatus([PermissionName.Microphone]))
-          .first;
-  if (_permission.permissionStatus != PermissionStatus.allow)
-    _permission =
-        (await Permission.requestPermissions([PermissionName.Microphone]))
-            .first;
-  return (_permission.permissionStatus == PermissionStatus.allow);
-}
 
 // This function sets up a connection to the java backend (if not already available) and yields the elements in the stream
 /// Returns a stream of lists of ints with the properties declared with the parameters.
@@ -62,7 +48,6 @@ Stream<List<int>> microphone <T>(
     AudioFormat audioFormat: _DEFAULT_AUDIO_FORMAT}) async* {
   if (sampleRate < _MIN_SAMPLE_RATE || sampleRate > _MAX_SAMPLE_RATE)
     throw (RangeError.range(sampleRate, _MIN_SAMPLE_RATE, _MAX_SAMPLE_RATE));
-  if (!(await permissionStatus)) throw (PlatformException);
 
   if (_microphone == null)
     _microphone = _microphoneEventChannel.receiveBroadcastStream([
